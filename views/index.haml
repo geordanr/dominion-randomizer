@@ -10,9 +10,10 @@
     %ul.rounded#cards0
     %ul.rounded#cards1
 
-    %ul.rounded#refresh
+  .touchable#refresh
+    %ul.rounded
       %li
-        %a.touchable
+        %a
           Refresh
 
   .touchable#banned-cards
@@ -23,13 +24,13 @@
 
   #expansions
     %h4
-      Use Expansions
+      Expansions
     %ul.rounded
       -@sources.sort{|a,b|a[0] <=> b[0]}.each do |source, allow|
         %li
           =source
           %span.toggle
-            %input{:type=>'checkbox', :checked=>allow}
+            %input{:type=>'checkbox', :checked=>allow, :id=>"exp_#{source}"}
 
   #starting-player
     %h4

@@ -1,5 +1,3 @@
-var ev = null;
-
 function DoubleBuffer(name) {
   this.name = name;
   this.active = 0;
@@ -18,15 +16,17 @@ function DoubleBuffer(name) {
     this.inactive ^= 1;
     this.getInactive().hide();
     this.getActive().show();
+    return this;
   };
 }
 
 var cardbuf = new DoubleBuffer('cards');
 var banbuf = new DoubleBuffer('ban');
 $(document).ready(function(){
-    set_handlers();
     update_spread();
     update_banlist();
+    update_expansions();
+    set_handlers();
 });
 
 function update_spread(refresh) {
@@ -63,25 +63,49 @@ function update_banlist() {
   });
 }
 
+function update_expansions() {
+  $.getJSON('/dominion/expansions', {}, function(expansions, status) {
+      for (var expansion in expansions) {
+        $('#exp_'+expansion)[0].checked = expansions[expansion];
+      }
+  });
+}
+
 function set_handlers() {
-  $('ul.rounded#refresh').tap(function (e) {
+  $('#refresh a').tap(function (e) {
     update_spread(true);
   });
   $('#spread a').tap(function (e) {
-    $.ajax({
-      url: '/dominion/cards/ban/' + e.target.id,
-      type: 'POST',
-      complete: function (xhr, stat) {
-        update_spread();
-        update_banlist();
-      },
-    });
+    var card = e.target.innerHTML;
+    if (card == 'Saboteur' || confirm('Really ban '+card+'?')) {
+      $.ajax({
+        url: '/dominion/cards/ban/' + e.target.id,
+        type: 'POST',
+        complete: function (xhr, stat) {
+          update_spread();
+          update_banlist();
+        },
+      });
+    }
   });
   $('#banned-cards a').tap(function (e) {
+    var card = e.target.innerHTML;
+    if (card != 'Saboteur' || confirm("Are you ABSOLUTELY SURE you want to unban Saboteur?  Do you not want to have friends?")) {
+      $.ajax({
+        url: '/dominion/cards/unban/' + e.target.id,
+        type: 'POST',
+        complete: update_banlist,
+      });
+    }
+  });
+  $('#expansions input[type="checkbox"]').bind('change', function(e){
+    var action = (e.target.checked) ? 'unban' : 'ban';
     $.ajax({
-      url: '/dominion/cards/unban/' + e.target.id,
+      url: '/dominion/expansions/'+action+'/' + e.target.id.split('_')[1],
       type: 'POST',
-      complete: update_banlist,
+      complete: function () {
+        update_spread();
+      },
     });
   });
 }

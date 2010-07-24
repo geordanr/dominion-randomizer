@@ -127,28 +127,28 @@ class DominionApp < Sinatra::Base
     @banned_cards.sort_by{|c| c.name}.to_json
   end
 
-  post '/dominion/cards/ban/:card_id' do |banned|
+  post '/dominion/cards/ban/:card_id', :layout => false do |banned|
     ban_card_id(banned)
-    redirect '/dominion/cards'
+    {'status' => 'OK', 'banned' => Card.get(banned)}.to_json
   end
 
-  post '/dominion/cards/unban/:card_id' do |unbanned|
+  post '/dominion/cards/unban/:card_id', :layout => false do |unbanned|
     unban_card_id(unbanned)
-    redirect '/dominion/cards'
+    {'status' => 'OK', 'unbanned' => Card.get(unbanned)}.to_json
   end
 
   get '/dominion/expansions/?', :layout => false do
     @sources.to_json
   end
 
-  post '/dominion/expansions/ban/:source' do |banned|
+  post '/dominion/expansions/ban/:source', :layout => false do |banned|
     ban_source(banned)
-    redirect '/dominion/expansions'
+    {'status' => 'OK', 'banned' => banned}.to_json
   end
 
-  post '/dominion/expansions/unban/:source' do |unbanned|
+  post '/dominion/expansions/unban/:source', :layout => false do |unbanned|
     unban_source(unbanned)
-    redirect '/dominion/expansions'
+    {'status' => 'OK', 'unbanned' => unbanned}.to_json
   end
 
 end
