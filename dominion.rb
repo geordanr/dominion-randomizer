@@ -1,18 +1,39 @@
 require 'rubygems'
 require 'sinatra/base'
 require 'lib/card'
+require 'haml'
+require 'json'
 
-class Array
+class Array # I ought to subclass this into a deck but eh
   def draw(n)
     # Draw n cards from the deck.
     slice!(0, n)
+  end
+
+  def require_potions!(min_alchemy_cards, deck)
+    # Returns set of cards required to satisfy this requirement.
+
+    return [] unless min_alchemy_cards and min_alchemy_cards > 0
+
+    # Is there at least one potion card in the spread?
+    potion_cards = select {|card| card.cost and card.cost.has_key?('potions') and card.cost['potions'] > 0}
+    if potions_cards.size < min_alchemy_cards
+      diff = min_alchemy_cards - potions_cards.size
+      # Randomly throw out the right number of cards from the leftover
+      rejectable = self - potion_cards
+      rejectable.draw(diff)
+      # Add eligible cards from the rest of the deck
+      new_alchemy_cards = deck.select{|card|card.source == 'Alchemy'}.draw(diff)
+      push(*new_alchemy_cards)
+    end
+    potion_cards + new_alchemy_cards
   end
 end
 
 class DominionApp < Sinatra::Base
   SPREAD_SIZE = 10
 
-  use Rack::Static, :urls => ['/images'], :root => 'public'
+  use Rack::Static, :urls => ['/images', '/js', '/jqtouch', '/themes'], :root => 'public'
 
   enable :sessions
 
@@ -23,25 +44,53 @@ class DominionApp < Sinatra::Base
 
     def shape(deck)
       # Remove any banned things
-      @banned_sources.each do |source|
-        deck -= Card.by_source(:key => source)
+      @sources.each_pair do |source, allow|
+        deck -= Card.by_source(:key => source) unless allow
       end
       deck -= @banned_cards
+    end
+
+    def ban_card_id(c_id)
+      session[:banned_card_ids] << c_id
+    end
+
+    def unban_card_id(c_id)
+      session[:banned_card_ids].delete(c_id)
+    end
+
+    def ban_source(source)
+      session[:sources][source] = false
+    end
+
+    def unban_source(source)
+      session[:sources][source] = true
+    end
+
+    def spread_cards
+      session[:spread].map{|c_id|Card.get(c_id)}
     end
   end
 
   before do
     session[:spread] ||= []
-    session[:banned_sources] ||= []
-    @banned_sources = session[:banned_sources]
+    unless session[:sources]
+      session[:sources] = {}
+      Card.by_source(:reduce=>true, :group_level=>1)['rows'].map{|h|h['key']}.each do |source|
+        unban_source(source)
+      end
+    end
+    @sources = session[:sources]
     session[:banned_card_ids] ||= []
     @banned_cards = session[:banned_card_ids].map{|c_id|Card.get(c_id)}
   end
 
-  get '/' do
+  get '/dominion/?' do
     @title = 'Dominion Randomizer'
-    @css_path = '/css/iphone.css'
-    @use_jquery = true
+    haml :index
+  end
+
+  get '/dominion/cards/?', :layout => false do
+    session[:spread] = [] if params[:refresh]
 
     if session[:spread].empty?
       deck = shape(Card.all)
@@ -49,7 +98,7 @@ class DominionApp < Sinatra::Base
       # Take the first 10 cards as the prospective deck.
       spread = deck.draw(SPREAD_SIZE)
     else
-      spread = session[:spread].map{|c_id|Card.get(c_id)}
+      spread = spread_cards
 
       # Remove any newly banned cards.
       spread = shape(spread)
@@ -64,68 +113,42 @@ class DominionApp < Sinatra::Base
       end
     end
 
-    # Do we care about potions?
-    if session[:min_alchemy_cards]
-      # Is there at least one potion card in the spread?
-      potion_cards = spread.select {|card| card.cost and card.cost.has_key?('potions') and card.cost['potions'] > 0}
-      if potions_cards.size < session[:min_alchemy_cards]
-        diff = session[:min_alchemy_cards] - potions_cards.size
-        # Randomly throw out the right number of cards from the leftover
-        rejectable = spread - potion_cards
-        rejectable.draw(diff)
-        # Add eligible cards from the rest of the deck
-        spread += deck.select{|card|card.source == 'Alchemy'}.draw(diff)
-      end
-    end
+    required_cards = []
+    required_cards += spread.require_potions!(session[:min_alchemy_cards], deck)
 
     # Save the spread (as card IDs)
     session[:spread] = spread.map{|c|c.id}
 
-    @cards = spread.sort_by {|c| c.name}
-    @sources = Card.by_source(:reduce=>true, :group_level=>1)['rows'].map{|h|h['key']} - @banned_sources
-
-    haml :index
+    @spread = spread.sort_by {|c| c.name}
+    spread_cards.sort_by {|c| c.name}.to_json
   end
 
-  get '/refresh' do
-    session[:spread] = []
-    redirect '/'
+  get '/dominion/cards/bans/?', :layout => false do
+    @banned_cards.sort_by{|c| c.name}.to_json
   end
 
-  get '/cards/?' do
-    redirect '/'
+  post '/dominion/cards/ban/:card_id' do |banned|
+    ban_card_id(banned)
+    redirect '/dominion/cards'
   end
 
-  get '/cards/ban/:card_id' do |banned|
-    session[:banned_card_ids] << banned
-    redirect '/'
+  post '/dominion/cards/unban/:card_id' do |unbanned|
+    unban_card_id(unbanned)
+    redirect '/dominion/cards'
   end
 
-  get '/cards/unban/:card_id' do |unbanned|
-    session[:banned_card_ids].delete(unbanned)
-    redirect '/'
+  get '/dominion/expansions/?', :layout => false do
+    @sources.to_json
   end
 
-  get '/expansions/?' do
-    redirect '/'
+  post '/dominion/expansions/ban/:source' do |banned|
+    ban_source(banned)
+    redirect '/dominion/expansions'
   end
 
-  get '/expansions/ban/:source' do |banned|
-    session[:banned_sources] << banned
-    redirect '/'
-  end
-
-  get '/expansions/unban/:source' do |unbanned|
-    session[:banned_sources].delete(unbanned)
-    redirect '/'
-  end
-
-  get '/css/?' do
-    redirect '/'
-  end
-
-  get '/css/:style.css' do |style|
-    sass style.to_sym
+  post '/dominion/expansions/unban/:source' do |unbanned|
+    unban_source(unbanned)
+    redirect '/dominion/expansions'
   end
 
 end

@@ -1,43 +1,50 @@
-:javascript
-  $(document).ready(function(){
-    $('body').addClass('rounded-container');
-    $('body').addClass('bg-striped');
-  });
-#cards
-  %ul.rounded
-    -@cards.each do |card|
-      %li
-        %a{:href => "/cards/ban/#{card.id}"}= card.name
+%script{:src=>'/js/dominion.js'}
+.current#main
+  .toolbar
+    %h1
+      RanDominion
+    %a.button.swap{:href=>'#settings'}
+      Settings
 
-  %ul.rounded
+  .touchable#spread
+    %ul.rounded#cards0
+    %ul.rounded#cards1
+
+    %ul.rounded#refresh
+      %li
+        %a.touchable
+          Refresh
+
+  .touchable#banned-cards
+    %h4
+      Banned Cards (tap to unban)
+    %ul.rounded#ban0
+    %ul.rounded#ban1
+
+  #expansions
+    %h4
+      Use Expansions
+    %ul.rounded
+      -@sources.sort{|a,b|a[0] <=> b[0]}.each do |source, allow|
+        %li
+          =source
+          %span.toggle
+            %input{:type=>'checkbox', :checked=>allow}
+
+  #starting-player
+    %h4
+      Starting Player
+    %ul.rounded
+      -1.upto(6) do |max_players|
+        %li
+          == #{max_players}-player game: Player #{starting_player(max_players)}
+
+#settings
+  .toolbar
+    %h1
+      Settings
+    %a.leftButton.back
+      Back
+  %ul.edgetoedge
     %li
-      %a{:href=>'/refresh'}
-        Refresh
-
-  .rounded-header
-    Banned Cards (tap to unban)
-  %ul.rounded
-    -@banned_cards.sort_by{|c|c.name}.each do |card|
-      %li
-        %a{:href=>"/cards/unban/#{card.id}"}= card.name
-
-  .rounded-header
-    Included Expansions (tap to exclude)
-  %ul.rounded
-    -@sources.sort.each do |source|
-      %li
-        %a{:href=>"/expansions/ban/#{source}"}= source
-
-  .rounded-header
-    Excluded Expansions (tap to include)
-  %ul.rounded
-    -@banned_sources.sort.each do |source|
-      %li
-        %a{:href=>"/expansions/unban/#{source}"}= source
-
-  .rounded-header
-    Starting Player
-  %ul.rounded
-    -1.upto(6) do |max_players|
-      %li
-        == #{max_players}-player game: Player #{starting_player(max_players)}
+      Nothing

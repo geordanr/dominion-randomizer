@@ -1,9 +1,17 @@
 %html
   %head
     %title= @title
-    %link{:media => 'only screen and (max-device-width: 480px)', :href => "/css/iphone.css", :type => "text/css", :rel => "stylesheet"}
-    %link{:media => 'screen and (min-device-width: 481px)', :href => "/css/browser.css", :type => "text/css", :rel => "stylesheet"}
-    -if @use_jquery
-      %script{:type=>'text/javascript', :src=>'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'}
+    %script{:type=>'text/javascript', :src=>'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'}
+    %script{:type=>'application/x-javascript', :src=>'/jqtouch/jqtouch.min.js'}
+    %link{:media => 'screen', :href => "/jqtouch/jqtouch.min.css", :type => "text/css", :rel => "stylesheet"}
+    %link{:media => 'screen', :href => "/themes/apple/theme.min.css", :type => "text/css", :rel => "stylesheet"}
+    :javascript
+      $.jQTouch({
+        icon: false,
+        cacheGetRequests: false,
+        statusBar: 'black',
+        preloadImages: [
+        ]
+      });
   %body
     =yield
