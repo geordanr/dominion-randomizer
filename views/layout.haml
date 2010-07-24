@@ -3,5 +3,7 @@
     %title= @title
     %link{:media => 'only screen and (max-device-width: 480px)', :href => "/css/iphone.css", :type => "text/css", :rel => "stylesheet"}
     %link{:media => 'screen and (min-device-width: 481px)', :href => "/css/browser.css", :type => "text/css", :rel => "stylesheet"}
+    -if @use_jquery
+      %script{:type=>'text/javascript', :src=>'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'}
   %body
     =yield

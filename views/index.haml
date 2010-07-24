@@ -1,8 +1,13 @@
+:javascript
+  $(document).ready(function(){
+    $('body').addClass('rounded-container');
+    $('body').addClass('bg-striped');
+  });
 #cards
   %ul.rounded
     -@cards.each do |card|
       %li
-        %a{:href => "/ban_card/#{card.id}"}= card.name
+        %a{:href => "/cards/ban/#{card.id}"}= card.name
 
   %ul.rounded
     %li
@@ -14,21 +19,21 @@
   %ul.rounded
     -@banned_cards.sort_by{|c|c.name}.each do |card|
       %li
-        %a{:href=>"/unban_card/#{c.id}"}= card.name
+        %a{:href=>"/cards/unban/#{card.id}"}= card.name
 
   .rounded-header
     Included Expansions (tap to exclude)
   %ul.rounded
     -@sources.sort.each do |source|
       %li
-        %a{:href=>"/ban_source/#{source}"}= source
+        %a{:href=>"/expansions/ban/#{source}"}= source
 
   .rounded-header
     Excluded Expansions (tap to include)
   %ul.rounded
     -@banned_sources.sort.each do |source|
       %li
-        %a{:href=>"/unban_source/#{source}"}= source
+        %a{:href=>"/expansions/unban/#{source}"}= source
 
   .rounded-header
     Starting Player
