@@ -1,0 +1,15 @@
+Dominion deck randomizer written in Sinatra and jQTouch against a CouchDB
+backend.
+
+There's some seed data about the cards in lib/card.rb, but you'll have to
+fill in the rest yourself.  (Read: buy the game, it's good.)
+
+Everything is off of /dominion/* because I want to serve static stuff
+directly from Apache, and I already use a virtual host for mobile type stuff;
+Passenger's RackBaseURI would be set to /dominion.
+
+Required gems:
+
+sinatra
+json-pure
+couchrest

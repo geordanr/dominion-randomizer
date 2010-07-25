@@ -72,6 +72,9 @@ class DominionApp < Sinatra::Base
   end
 
   before do
+    # Hack: ensure /dominion is in the PATH_INFO, since we're serving from
+    # Passenger's RackBaseURI.
+    request.env['PATH_INFO'].sub!(/^/, '/dominion') unless request.env['PATH_INFO'] =~ /^\/dominion/
     session[:spread] ||= []
     unless session[:sources]
       session[:sources] = {}

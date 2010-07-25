@@ -17,13 +17,13 @@
           Refresh
 
   .touchable#banned-cards
-    %h4
+    %h2
       Banned Cards (tap to unban)
     %ul.rounded#ban0
     %ul.rounded#ban1
 
   #expansions
-    %h4
+    %h2
       Expansions
     %ul.rounded
       -@sources.sort{|a,b|a[0] <=> b[0]}.each do |source, allow|
@@ -33,7 +33,7 @@
             %input{:type=>'checkbox', :checked=>allow, :id=>"exp_#{source}"}
 
   #starting-player
-    %h4
+    %h2
       Starting Player
     %ul.rounded
       -1.upto(6) do |max_players|
