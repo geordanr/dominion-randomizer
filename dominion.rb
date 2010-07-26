@@ -14,19 +14,45 @@ class Array # I ought to subclass this into a deck but eh
     # Returns set of cards required to satisfy this requirement.
 
     return [] unless min_alchemy_cards and min_alchemy_cards > 0
+    #warn "Requiring #{min_alchemy_cards} Alchemy cards"
 
     # Is there at least one potion card in the spread?
     potion_cards = select {|card| card.cost and card.cost.has_key?('potions') and card.cost['potions'] > 0}
-    if potions_cards.size < min_alchemy_cards
-      diff = min_alchemy_cards - potions_cards.size
-      # Randomly throw out the right number of cards from the leftover
-      rejectable = self - potion_cards
-      rejectable.draw(diff)
-      # Add eligible cards from the rest of the deck
-      new_alchemy_cards = deck.select{|card|card.source == 'Alchemy'}.draw(diff)
-      push(*new_alchemy_cards)
+    #warn "Potion cards in spread:\n#{potion_cards.map{|c|c.name}.join("\n")}"
+    alchemy_cards = select {|card| card.source == 'Alchemy'}
+    #warn "Alchemy cards in spread:\n#{alchemy_cards.map{|c|c.name}.join("\n")}"
+    kept_cards = Set.new(potion_cards + alchemy_cards).to_a
+    #warn "Keeping cards in spread:\n#{kept_cards.map{|c|c.name}.join("\n")}"
+    replacements = []
+    if not potion_cards.empty? and (kept_cards.size < min_alchemy_cards)
+      # Need this many cards, potentially.
+      diff = min_alchemy_cards - kept_cards.size
+      #warn "Need #{diff} new Alchemy cards"
+
+      # Get as many eligible new cards as possible (some may have been banned)
+      eligible = deck.select{|card|card.source == 'Alchemy'}
+      #warn "#{eligible.size} Alchemy cards remain in the deck"
+
+      num_new_cards = (eligible.size < diff) ? eligible.size : diff
+      #warn "#{num_new_cards} available for us to draw"
+      new_alchemy_cards = eligible.draw(num_new_cards)
+      #warn "New alchemy cards:\n#{new_alchemy_cards.map{|c|c.name}.join("\n")}"
+
+      # Throw out as many rejectable cards as we can
+      rejectable = self - kept_cards
+      #warn "Eligible for discard from spread:\n#{rejectable.map{|c|c.name}.join("\n")}"
+      rejectable.shuffle!
+      rejected = rejectable.draw(num_new_cards)
+      rejected.each {|card| delete(card)} # wish I could -= in here
+      #warn "Discarded from spread:\n#{rejected.map{|c|c.name}.join("\n")}"
+
+      # Replace them
+      replacements = new_alchemy_cards.draw(rejected.size)
+      #warn "Replaced with:\n#{replacements.map{|c|c.name}.join("\n")}"
+
+      push(*replacements)
     end
-    potion_cards + new_alchemy_cards
+    kept_cards + replacements
   end
 end
 
@@ -95,22 +121,21 @@ class DominionApp < Sinatra::Base
   get '/dominion/cards/?', :layout => false do
     session[:spread] = [] if params[:refresh]
 
+    deck = shape(Card.all)
+
     if session[:spread].empty?
-      deck = shape(Card.all)
       deck.shuffle!
       # Take the first 10 cards as the prospective deck.
       spread = deck.draw(SPREAD_SIZE)
     else
       spread = spread_cards
+      deck -= spread
 
       # Remove any newly banned cards.
       spread = shape(spread)
 
       if spread.size < SPREAD_SIZE
-        # Only create and shape the deck if we actually need to draw cards.
-        deck = shape(Card.all)
         # Remove existing cards from the deck.
-        deck -= spread
         deck.shuffle!
         spread += deck.draw(SPREAD_SIZE - spread.size)
       end
@@ -152,6 +177,11 @@ class DominionApp < Sinatra::Base
   post '/dominion/expansions/unban/:source', :layout => false do |unbanned|
     unban_source(unbanned)
     {'status' => 'OK', 'unbanned' => unbanned}.to_json
+  end
+
+  post '/dominion/alchemy/min/:n', :layout => false do |n|
+    session[:min_alchemy_cards] = n.to_i
+    {'status' => 'OK', 'min_alchemy_cards' => n.to_i}.to_json
   end
 
 end

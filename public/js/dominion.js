@@ -108,4 +108,13 @@ function set_handlers() {
       },
     });
   });
+  $('select#alchemy-min-cards').bind('change', function(e) {
+    $.ajax({
+      url: '/dominion/alchemy/min/' + $(e.target).val(),
+      type: 'POST',
+      complete: function () {
+        update_spread();
+      },
+    });
+  });
 }

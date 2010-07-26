@@ -1,10 +1,8 @@
 %script{:src=>'/js/dominion.js'}
 .current#main
   .toolbar
-    %h1
-      RanDominion
-    %a.button.swap{:href=>'#settings'}
-      Settings
+    %h1 RanDominion
+    %a.button.slideup{:href=>'#settings'} Settings
 
   .touchable#spread
     %ul.rounded#cards0
@@ -13,28 +11,15 @@
   .touchable#refresh
     %ul.rounded
       %li
-        %a
-          Refresh
+        %a Refresh
 
   .touchable#banned-cards
-    %h2
-      Banned Cards (tap to unban)
+    %h2 Banned Cards (tap to unban)
     %ul.rounded#ban0
     %ul.rounded#ban1
 
-  #expansions
-    %h2
-      Expansions
-    %ul.rounded
-      -@sources.sort{|a,b|a[0] <=> b[0]}.each do |source, allow|
-        %li
-          =source
-          %span.toggle
-            %input{:type=>'checkbox', :checked=>allow, :id=>"exp_#{source}"}
-
   #starting-player
-    %h2
-      Starting Player
+    %h2 Starting Player
     %ul.rounded
       -1.upto(6) do |max_players|
         %li
@@ -42,10 +27,25 @@
 
 #settings
   .toolbar
-    %h1
-      Settings
-    %a.leftButton.back
-      Back
-  %ul.edgetoedge
-    %li
-      Nothing
+    %h1 Settings
+    %a.leftButton.back Back
+
+  #expansions
+    %h2 Expansions
+    %ul.rounded
+      -@sources.sort{|a,b|a[0] <=> b[0]}.each do |source, allow|
+        %li
+          =source
+          %span.toggle
+            %input{:type=>'checkbox', :checked=>allow, :id=>"exp_#{source}"}
+
+  #alchemy-rules
+    %h2 Alchemy
+    %form
+      %ul.form
+        %li 
+          %select#alchemy-min-cards
+            %option{:value=>0}Minimum Alchemy cards w/ Potion...
+            %option{:value=>0}Ignore minimum Alchemy card rule
+            -1.upto(5) do |n|
+              %option{:value=>n}== Minimum #{n} Alchemy card#{n>1 ? 's' : ''} w/ Potion
