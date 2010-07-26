@@ -155,7 +155,23 @@ class DominionApp < Sinatra::Base
     session[:spread] = spread.map{|c|c.id}
 
     @spread = spread.sort_by {|c| c.name}
-    spread_cards.sort_by {|c| c.name}.to_json
+    if session[:spread_sort] == 'expansion'
+      spread_cards.sort_by {|c| c.source + c.name}.to_json
+    else
+      spread_cards.sort_by {|c| c.name}.to_json
+    end
+  end
+
+  post '/dominion/cards/sort/:by', :layout => false do |by|
+    case by
+    when 'expansion'
+      session[:spread_sort] = 'expansion'
+    when 'name'
+      session[:spread_sort] = 'name'
+    else
+      session[:spread_sort] = 'name'
+    end
+    {'status' => 'OK', 'sort' => session[:spread_sort]}.to_json
   end
 
   get '/dominion/cards/bans/?', :layout => false do
@@ -189,6 +205,13 @@ class DominionApp < Sinatra::Base
   post '/dominion/alchemy/min/:n', :layout => false do |n|
     session[:min_alchemy_cards] = n.to_i
     {'status' => 'OK', 'min_alchemy_cards' => n.to_i}.to_json
+  end
+
+  get '/dominion/config', :layout => false do
+    {
+      'alchemy_min_cards' => session[:min_alchemy_cards],
+      'sort_by' => session[:spread_sort],
+    }.to_json
   end
 
 end

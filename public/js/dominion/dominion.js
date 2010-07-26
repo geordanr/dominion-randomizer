@@ -23,6 +23,7 @@ function DoubleBuffer(name) {
 var cardbuf = new DoubleBuffer('cards');
 var banbuf = new DoubleBuffer('ban');
 $(document).ready(function(){
+    update_settings();
     update_spread();
     update_banlist();
     update_expansions();
@@ -38,7 +39,7 @@ function update_spread(refresh) {
       var inac = cardbuf.getInactive();
       spread.forEach(function(card) {
         var id = card['_id'];
-        inac.append('<li><a id="'+id+'">'+card.name+'</a></li>');
+        inac.append('<li><a id="'+id+'">'+card.name+'<small><img src="/images/dominion/'+card.source+'.png" alt="'+card.source+'"/></small></a></li>');
       });
 
       cardbuf.swap();
@@ -116,5 +117,21 @@ function set_handlers() {
         update_spread();
       },
     });
+  });
+  $('select#spread-sort').bind('change', function(e) {
+    $.ajax({
+      url: '/dominion/cards/sort/' + $(e.target).val(),
+      type: 'POST',
+      complete: function () {
+        update_spread();
+      },
+    });
+  });
+}
+
+function update_settings() {
+  $.getJSON('/dominion/config', {}, function (config, status) {
+    if (config.alchemy_min_cards != null) $('select#alchemy-min-cards').val(config.alchemy_min_cards);
+    if (config.sort_by != null) $('select#spread-sort').val(config.sort_by);
   });
 }

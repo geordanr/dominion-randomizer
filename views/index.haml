@@ -1,4 +1,4 @@
-%script{:src=>'/js/dominion.js'}
+%script{:src=>'/js/dominion/dominion.js'}
 .current#main
   .toolbar
     %h1 RanDominion
@@ -45,7 +45,18 @@
       %ul.form
         %li 
           %select#alchemy-min-cards
-            %option{:value=>0}Minimum Alchemy cards w/ Potion...
+            %option{:value=>-1}Minimum Alchemy cards w/ Potion...
             %option{:value=>0}Ignore minimum Alchemy card rule
             -1.upto(5) do |n|
               %option{:value=>n}== Minimum #{n} Alchemy card#{n>1 ? 's' : ''} w/ Potion
+
+  #general
+    %h2 General
+    %ul.rounded
+      %form
+        %ul.form
+          %li 
+            %select#spread-sort
+              %option{:value=>''}Sort cards by...
+              %option{:value=>'name'}Sort cards by name
+              %option{:value=>'expansion'}Sort cards by expansion
