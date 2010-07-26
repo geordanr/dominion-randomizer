@@ -99,15 +99,20 @@ function set_handlers() {
       });
     }
   });
-  $('#expansions input[type="checkbox"]').bind('change', function(e){
+  $('#expansions input[type="checkbox"]').bind('click', function(e){
     var action = (e.target.checked) ? 'unban' : 'ban';
+    var expansion = e.target.id.split('_')[1]
     $.ajax({
-      url: '/dominion/expansions/'+action+'/' + e.target.id.split('_')[1],
+      url: '/dominion/expansions/'+action+'/' + expansion,
       type: 'POST',
-      complete: function () {
+      dataType: 'json',
+      success: function (data, status, xhr) {
         update_spread();
+        if (data.banned) $('#exp_'+data.banned)[0].checked = false;
+        if (data.unbanned) $('#exp_'+data.unbanned)[0].checked = true;
       },
     });
+    return false;
   });
   $('select#alchemy-min-cards').bind('change', function(e) {
     $.ajax({
