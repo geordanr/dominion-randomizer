@@ -71,9 +71,16 @@ class DominionApp < Sinatra::Base
     def shape(deck)
       # Remove any banned things
       @sources.each_pair do |source, allow|
-        deck -= Card.by_source(:key => source) unless allow
+        unless allow
+          Card.by_source(:key => source).each do |card|
+            deck.reject!{|c|c.id == card.id}
+          end
+        end
       end
-      deck -= @banned_cards
+      @banned_cards.each do |card|
+        deck.reject!{|c|c.id == card.id}
+      end
+      deck
     end
 
     def ban_card_id(c_id)
