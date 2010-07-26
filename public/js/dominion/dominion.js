@@ -39,7 +39,7 @@ function update_spread(refresh) {
       var inac = cardbuf.getInactive();
       spread.forEach(function(card) {
         var id = card['_id'];
-        inac.append('<li><a id="'+id+'">'+card.name+'<small><img src="/images/dominion/'+card.source+'.png" alt="'+card.source+'"/></small></a></li>');
+        inac.append('<li><a id="'+id+'" name="'+card.name+'">'+card.name+'<small><img src="/images/dominion/'+card.source+'.png" alt="'+card.source+'"/></small></a></li>');
       });
 
       cardbuf.swap();
@@ -77,7 +77,7 @@ function set_handlers() {
     update_spread(true);
   });
   $('#spread a').tap(function (e) {
-    var card = e.target.innerHTML;
+    var card = e.target.name;
     if (card == 'Saboteur' || confirm('Really ban '+card+'?')) {
       $.ajax({
         url: '/dominion/cards/ban/' + e.target.id,
