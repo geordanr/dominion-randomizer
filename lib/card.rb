@@ -57,15 +57,7 @@ end
 
 class Array
   def shuffle!
-    size.downto(1) do |n| 
-      puts "Size is #{size}, n is #{n}"
-      puts "Rand is #{method(:rand)}"
-      del_idx = rand(n)
-      puts "Removing from index #{del_idx} ..."
-      rand_card = delete_at(del_idx)
-      puts "Got card #{rand_card.name}"
-      push(rand_card)
-    end
+    size.downto(1) { |n| push delete_at(Kernel.rand(n)) }
     self
   end
 end
