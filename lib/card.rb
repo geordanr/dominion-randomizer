@@ -2,6 +2,7 @@ require 'rubygems'
 require 'couchrest'
 require 'couchrest_extended_document'
 require 'set'
+require 'pp'
 
 DBURI = ENV['CLOUDANT_URL'] || 'http://127.0.0.1:5984'
 DB = CouchRest.database("#{DBURI}/dominion")
@@ -57,6 +58,9 @@ end
 
 class Array
   def shuffle!
+    puts "===== Shuffling:"
+    pp(self)
+    puts "====="
     size.downto(1) { |n| push delete_at(rand(n)) }
     self
   end
