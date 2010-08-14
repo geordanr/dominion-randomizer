@@ -39,7 +39,7 @@ function update_spread(refresh) {
       var inac = cardbuf.getInactive();
       spread.forEach(function(card) {
         var id = card['_id'];
-        var img = card.source == 'boardgamegeek' ? 'ferris-wheel' : card.source.toLowerCase();
+        var img = card.source == 'Boardgamegeek' ? 'ferris-wheel' : card.source.toLowerCase();
         inac.append('<li><a id="'+id+'" name="'+card.name+'">'+card.name+'<small><img src="/images/dominion/'+img+'.svg" width="20" height="20" alt="'+card.source+'"/></small></a></li>');
       });
 
