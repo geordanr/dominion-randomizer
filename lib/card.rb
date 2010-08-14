@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'couchrest'
+require 'couchrest_extended_document'
 require 'set'
 
 DBURI = ENV['CLOUDANT_URL'] || 'http://127.0.0.1:5984'

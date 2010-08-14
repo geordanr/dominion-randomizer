@@ -1,4 +1,5 @@
-couchrest --version '>=0.37'
+couchrest --version '>=1.0.0'
+couchrest_extended_document --version '>=1.0.0'
 haml --version '>=3.0.13'
 json_pure --version '>=1.4.3'
 sinatra --version '>=1.0'
