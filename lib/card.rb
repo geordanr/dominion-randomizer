@@ -2,7 +2,8 @@ require 'rubygems'
 require 'couchrest'
 require 'set'
 
-DB = CouchRest.database!('http://127.0.0.1:5984/dominion')
+DBURI = ENV['CLOUDANT_URL'] || 'http://127.0.0.1:5984'
+DB = CouchRest.database("#{DBURI}/dominion")
 
 class Card < CouchRest::ExtendedDocument
   use_database DB
