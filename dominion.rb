@@ -61,7 +61,10 @@ class DominionApp < Sinatra::Base
 
   use Rack::Static, :urls => ['/images', '/js', '/jqtouch', '/themes'], :root => 'public'
 
-  enable :sessions
+  use Rack::Session::Cookie, :key => 'rack.session.dominion',
+                             :domain => 'wuut.net',
+                             :path => '/dominion',
+                             :expire_after => 10*365*24*60*60 # 10 years!
 
   helpers do
     def starting_player(n)
