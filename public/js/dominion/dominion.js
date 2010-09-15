@@ -62,6 +62,12 @@ function update_banlist() {
 
       inac = banbuf.getInactive();
       inac.empty();
+
+      if (bans.length == 0) {
+        $('#banned-cards').hide();
+      } else {
+        $('#banned-cards').show();
+      }
   });
 }
 
@@ -115,9 +121,22 @@ function set_handlers() {
     });
     return false;
   });
+  $('input#pacifist').bind('click', function(e){
+    var pacifist = (e.target.checked) ? 1 : 0;
+    $.ajax({
+      url: '/dominion/config/pacifist/'+pacifist,
+      type: 'POST',
+      dataType: 'json',
+      success: function (data, status, xhr) {
+        update_spread();
+        $('input#pacifist')[0].checked = (parseInt(data.pacifist) == 1);
+      },
+    });
+    return false;
+  })
   $('select#alchemy-min-cards').bind('change', function(e) {
     $.ajax({
-      url: '/dominion/alchemy/min/' + $(e.target).val(),
+      url: '/dominion/config/min_alchemy_cards/' + $(e.target).val(),
       type: 'POST',
       complete: function () {
         update_spread();
@@ -126,7 +145,7 @@ function set_handlers() {
   });
   $('select#spread-sort').bind('change', function(e) {
     $.ajax({
-      url: '/dominion/cards/sort/' + $(e.target).val(),
+      url: '/dominion/config/spread_sort/' + $(e.target).val(),
       type: 'POST',
       complete: function () {
         update_spread();
@@ -137,7 +156,8 @@ function set_handlers() {
 
 function update_settings() {
   $.getJSON('/dominion/config', {}, function (config, status) {
-    if (config.alchemy_min_cards != null) $('select#alchemy-min-cards').val(config.alchemy_min_cards);
-    if (config.sort_by != null) $('select#spread-sort').val(config.sort_by);
+    if (config.min_alchemy_cards != null) $('select#alchemy-min-cards').val(config.min_alchemy_cards);
+    if (config.spread_sort != null) $('select#spread-sort').val(config.spread_sort);
+    if (config.pacifist == 1) $('input#pacifist')[0].checked = true;
   });
 }

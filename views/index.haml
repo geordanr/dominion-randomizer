@@ -40,22 +40,28 @@
             %input{:type=>'checkbox', :checked=>allow, :id=>"exp_#{source}"}
 
   #alchemy-rules
-    %h2 Alchemy
+    %h2 Alchemy Rules
     %form
       %ul.form
         %li 
           %select#alchemy-min-cards
-            %option{:value=>-1}Minimum Alchemy cards w/ Potion...
             %option{:value=>0}Ignore minimum Alchemy card rule
             -1.upto(5) do |n|
               %option{:value=>n}== Minimum #{n} Alchemy card#{n>1 ? 's' : ''} w/ Potion
 
-  #general
-    %h2 General
+  #sorting
+    %h2 Sorting
     %form
       %ul.form
         %li 
           %select#spread-sort
-            %option{:value=>''}Sort cards by...
             %option{:value=>'name'}Sort cards by name
             %option{:value=>'expansion'}Sort cards by expansion
+
+  #card-preferences
+    %h2 Card Preferences
+    %ul.rounded
+      %li
+        Pacifist (no Attack Cards)
+        %span.toggle
+          %input{:type=>'checkbox', :id=>"pacifist"}

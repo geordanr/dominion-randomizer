@@ -58,12 +58,15 @@ end
 
 class DominionApp < Sinatra::Base
   SPREAD_SIZE = 10
+  VALID_SETTINGS = [
+    'min_alchemy_cards',
+    'spread_sort',
+    'pacifist',
+  ]
 
   use Rack::Static, :urls => ['/images', '/js', '/jqtouch', '/themes'], :root => 'public'
 
   use Rack::Session::Cookie, :key => 'rack.session.dominion',
-                             :domain => 'wuut.net',
-                             :path => '/dominion',
                              :expire_after => 10*365*24*60*60 # 10 years!
 
   helpers do
@@ -82,6 +85,11 @@ class DominionApp < Sinatra::Base
       end
       @banned_cards.each do |card|
         deck.reject!{|c|c.id == card.id}
+      end
+      if get_setting('pacifist').to_i == 1
+        Card.by_keywords(:key => 'Attack').each do |card|
+          deck.reject!{|c|c.id == card.id}
+        end
       end
       deck
     end
@@ -105,6 +113,14 @@ class DominionApp < Sinatra::Base
     def spread_cards
       session[:spread].map{|c_id|Card.get(c_id)}
     end
+
+    def get_setting(setting)
+      if session[:settings].has_key?(setting)
+        session[:settings][setting]
+      else
+        nil
+      end
+    end
   end
 
   before do
@@ -112,6 +128,7 @@ class DominionApp < Sinatra::Base
     # Passenger's RackBaseURI.
     request.env['PATH_INFO'].sub!(/^/, '/dominion') unless request.env['PATH_INFO'] =~ /^\/dominion/
     session[:spread] ||= []
+    session[:settings] ||= {}
     unless session[:sources]
       session[:sources] = {}
       Card.by_source(:reduce=>true, :group_level=>1)['rows'].map{|h|h['key']}.each do |source|
@@ -133,6 +150,9 @@ class DominionApp < Sinatra::Base
 
     deck = shape(Card.all)
 
+    # Remove attack cards if we're in Pacifist mode.
+    deck -= Card.by_keywords(:key => 'Attack') if get_setting('pacifist').to_i == 1
+
     if session[:spread].empty?
       deck.shuffle!
       # Take the first 10 cards as the prospective deck.
@@ -152,29 +172,17 @@ class DominionApp < Sinatra::Base
     end
 
     required_cards = []
-    required_cards += spread.require_potions!(session[:min_alchemy_cards], deck)
+    required_cards += spread.require_potions!(get_setting('min_alchemy_cards').to_i, deck)
 
     # Save the spread (as card IDs)
     session[:spread] = spread.map{|c|c.id}
 
     @spread = spread.sort_by {|c| c.name}
-    if session[:spread_sort] == 'expansion'
+    if get_setting('spread_sort') == 'expansion'
       spread_cards.sort_by {|c| c.source + c.name}.to_json
     else
       spread_cards.sort_by {|c| c.name}.to_json
     end
-  end
-
-  post '/dominion/cards/sort/:by', :layout => false do |by|
-    case by
-    when 'expansion'
-      session[:spread_sort] = 'expansion'
-    when 'name'
-      session[:spread_sort] = 'name'
-    else
-      session[:spread_sort] = 'name'
-    end
-    {'status' => 'OK', 'sort' => session[:spread_sort]}.to_json
   end
 
   get '/dominion/cards/bans/?', :layout => false do
@@ -205,16 +213,21 @@ class DominionApp < Sinatra::Base
     {'status' => 'OK', 'unbanned' => unbanned}.to_json
   end
 
-  post '/dominion/alchemy/min/:n', :layout => false do |n|
-    session[:min_alchemy_cards] = n.to_i
-    {'status' => 'OK', 'min_alchemy_cards' => n.to_i}.to_json
+  get '/dominion/config', :layout => false do
+    ret = {}
+    VALID_SETTINGS.each do |setting|
+      ret[setting] = get_setting(setting)
+    end
+    ret.to_json
   end
 
-  get '/dominion/config', :layout => false do
-    {
-      'alchemy_min_cards' => session[:min_alchemy_cards],
-      'sort_by' => session[:spread_sort],
-    }.to_json
+  post '/dominion/config/:setting/:value', :layout => false do |setting, value|
+    if VALID_SETTINGS.member?(setting)
+      session[:settings][setting] = value
+      {'status' => 'OK', setting => value }.to_json
+    else
+      {'status' => 'ERROR', 'error' => 'Invalid setting' }.to_json
+    end
   end
 
 end
