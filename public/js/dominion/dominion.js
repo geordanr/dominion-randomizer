@@ -36,8 +36,10 @@ function update_spread(refresh) {
     url += '?refresh=1'
   }
   $.getJSON(url, {}, function(data, status) {
-      var prosp = $('#use-prosperity-cards');
-      prosp.hide();
+      var use_prosp = $('#use-prosperity-cards');
+      var dont_use_prosp = $('#dont-use-prosperity-cards');
+      use_prosp.hide();
+      dont_use_prosp.hide();
 
       var inac = cardbuf.getInactive();
       var spread = data.spread;
@@ -53,7 +55,9 @@ function update_spread(refresh) {
       inac.empty();
 
       if (data.use_prosperity_cards) {
-        prosp.show();
+        use_prosp.show();
+      } else {
+        dont_use_prosp.show();
       }
   });
 }
