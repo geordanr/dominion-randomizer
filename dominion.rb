@@ -129,12 +129,13 @@ class DominionApp < Sinatra::Base
     request.env['PATH_INFO'].sub!(/^/, '/dominion') unless request.env['PATH_INFO'] =~ /^\/dominion/
     session[:spread] ||= []
     session[:settings] ||= {}
-    unless session[:sources]
-      session[:sources] = {}
-      Card.by_source(:reduce=>true, :group_level=>1)['rows'].map{|h|h['key']}.each do |source|
-        unban_source(source)
-      end
+    session[:sources] ||= {}
+
+    # Check for new expansions
+    Card.by_source(:reduce=>true, :group_level=>1)['rows'].map{|h|h['key']}.each do |source|
+      unban_source(source) unless session[:sources].has_key?(source)
     end
+    
     @sources = session[:sources]
     session[:banned_card_ids] ||= []
     @banned_cards = session[:banned_card_ids].map{|c_id|Card.get(c_id)}
@@ -178,11 +179,16 @@ class DominionApp < Sinatra::Base
     session[:spread] = spread.map{|c|c.id}
 
     @spread = spread.sort_by {|c| c.name}
-    if get_setting('spread_sort') == 'expansion'
-      spread_cards.sort_by {|c| c.source + c.name}.to_json
+    output = {
+      'use_prosperity_cards' => Kernel.rand(10) < spread_cards.select {|c| c.source == 'Prosperity'}.length,
+    }
+    output['spread'] = if get_setting('spread_sort') == 'expansion'
+      spread_cards.sort_by {|c| c.source + c.name}
     else
-      spread_cards.sort_by {|c| c.name}.to_json
+      spread_cards.sort_by {|c| c.name}
     end
+
+    output.to_json
   end
 
   get '/dominion/cards/bans/?', :layout => false do

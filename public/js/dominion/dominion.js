@@ -35,8 +35,12 @@ function update_spread(refresh) {
   if (refresh) {
     url += '?refresh=1'
   }
-  $.getJSON(url, {}, function(spread, status) {
+  $.getJSON(url, {}, function(data, status) {
+      var prosp = $('#use-prosperity-cards');
+      prosp.hide();
+
       var inac = cardbuf.getInactive();
+      var spread = data.spread;
       spread.forEach(function(card) {
         var id = card['_id'];
         var img = card.source == 'Boardgamegeek' ? 'ferris-wheel' : card.source.toLowerCase();
@@ -47,6 +51,10 @@ function update_spread(refresh) {
 
       inac = cardbuf.getInactive();
       inac.empty();
+
+      if (data.use_prosperity_cards) {
+        prosp.show();
+      }
   });
 }
 
